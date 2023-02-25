@@ -24,7 +24,7 @@
 
 
 <!-- TABLE OF CONTENTS -->
-<details>
+<details open>
   <summary>Table of Contents</summary>
   <ol>
     <li>
@@ -58,7 +58,7 @@
 
 ### Built With
 
-* <a href="https://nodejs.org/en/">Nodejs.js</a>
+* <a href="https://nodejs.org/en/">Nodejs.js</a> 
 * <a href="https://www.mongodb.com/">MongoDB</a>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -70,8 +70,8 @@
 
 ### Prerequisites
 
- <a href="https://nodejs.org/en/">Nodejs</a>.
- <a href="https://www.mongodb.com/products/compass">MongoDB Compass</a>.
+ <a href="https://nodejs.org/en/">Nodejs</a>  <br>
+ <a href="https://www.mongodb.com/products/compass">MongoDB Compass</a>
 
 ### Installation
 
@@ -88,11 +88,11 @@
 4. Create `.env` file in `root` folder and then paste this codes.
    ```js
    MONGODB_DEV_URL= mongodb://localhost:27017/miracle-healing-camp
-  PORT = 4000
-  API_SECRET = $2y$10$tZVSWU.fBQCOxZWV9/n95OUCZqWtzgBA6Hu.Rso2rNAOWzdk1kS6C
-  REFRESH_TOKEN_SECRET = dGhpc2lzcmVmcmVzaHRva2Vuc2VjcmV0a2V5
-  EMAIL=
-  PASSWORD=  
+   PORT = 4000
+   API_SECRET = $2y$10$tZVSWU.fBQCOxZWV9/n95OUCZqWtzgBA6Hu.Rso2rNAOWzdk1kS6C
+   REFRESH_TOKEN_SECRET = dGhpc2lzcmVmcmVzaHRva2Vuc2VjcmV0a2V5
+   EMAIL=
+   PASSWORD=  
    ```
 5. Run a Project
    ```sh
