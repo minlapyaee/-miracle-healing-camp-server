@@ -50,6 +50,7 @@
 
 * <a href="https://nodejs.org/en/">Nodejs.js</a> 
 * <a href="https://www.mongodb.com/">MongoDB</a>
+* <a href="https://jwt.io/">JWT</a>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
