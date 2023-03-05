@@ -82,8 +82,8 @@
    PORT = 4000
    API_SECRET = $2y$10$tZVSWU.fBQCOxZWV9/n95OUCZqWtzgBA6Hu.Rso2rNAOWzdk1kS6C
    REFRESH_TOKEN_SECRET = dGhpc2lzcmVmcmVzaHRva2Vuc2VjcmV0a2V5
-   EMAIL=
-   PASSWORD=  
+   EMAIL= miracle.healingcamp@gmail.com
+   PASSWORD= wzxixzlgfiayorad
    ```
 5. Run a Project
    ```sh
