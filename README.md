@@ -62,6 +62,7 @@
 ### Prerequisites
 
  <a href="https://nodejs.org/en/">Nodejs</a>  <br>
+ <a href="https://www.mongodb.com/try/download/community">MongoDB</a> <br>
  <a href="https://www.mongodb.com/products/compass">MongoDB Compass</a>
 
 ### Installation
