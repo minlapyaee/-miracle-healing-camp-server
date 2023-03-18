@@ -7,6 +7,7 @@ const {
   fetchComment,
   createLike,
   fetchPostDetail,
+  createAppointment
 } = require("../controllers/client.controller");
 
 const router = Router();
@@ -17,5 +18,6 @@ router.get("/fetch_post_detail", verifyToken, fetchPostDetail);
 router.post("/create_comment", verifyToken, createComment);
 router.get("/fetch_comment", verifyToken, fetchComment);
 router.post("/create_like", verifyToken, createLike);
+router.post("/create_appointment", verifyToken, createAppointment)
 
 module.exports = router;

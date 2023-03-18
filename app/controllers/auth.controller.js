@@ -10,7 +10,7 @@ const nodemailer = require("nodemailer");
 
 // KrVXZJ 2023-02-18T07:46:23.677+00:00
 let mailOptions = {
-  from: "justinscold@gmail.com",
+  from: process.env.EMAIL ,
   subject: "Hello ✔ From Miracle Camp Healing",
 };
 
@@ -143,7 +143,6 @@ exports.checkOtp = async (req, res) => {
 };
 
 exports.signin = (req, res) => {
-  console.log(req.body);
   User.findOne({
     email: req.body.email,
   }).exec(async (err, user) => {
