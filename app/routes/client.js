@@ -7,7 +7,9 @@ const {
   fetchComment,
   createLike,
   fetchPostDetail,
-  createAppointment
+  createAppointment,
+  checkAppointment,
+  registerCustomer,
 } = require("../controllers/client.controller");
 
 const router = Router();
@@ -19,5 +21,7 @@ router.post("/create_comment", verifyToken, createComment);
 router.get("/fetch_comment", verifyToken, fetchComment);
 router.post("/create_like", verifyToken, createLike);
 router.post("/create_appointment", verifyToken, createAppointment)
+router.get("/check_appointment", verifyToken, checkAppointment)
+router.post("/register_customer", verifyToken, registerCustomer)
 
 module.exports = router;

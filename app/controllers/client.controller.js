@@ -1,14 +1,10 @@
-const requestPromise = require("request-promise");
 const Post = require("../models/post.model");
 const Comment = require("../models/comment.model");
+const Appointment = require("../models/appointment.model");
+const Meet = require("../models/meet.model");
+const Customer = require("../models/customer.model");
 const Like = require("../models/like.model");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
-
-let mailOptions = {
-  from: process.env.EMAIL,
-  subject: "Zoom Meeting Using Node JS :D",
-};
 
 const payload = {
   iss: process.env.ZOOM_API_KEY, //your API KEY
@@ -210,61 +206,61 @@ exports.createLike = async (req, res) => {
   }
 };
 
-// create zoom meeting link
-const createMeeting = async (req, res) => {
-  email = process.env.EMAIL;
-
-  const options = {
-    method: "POST",
-    uri: "https://api.zoom.us/v2/users/" + email + "/meetings",
-    body: {
-      topic: "Your appointment is ready", //meeting title
-      start_time: new Date(),
-      type: 1,
-      settings: {
-        host_video: "true",
-        participant_video: "true",
-      },
-    },
-    auth: {
-      bearer: token,
-    },
-    headers: {
-      "User-Agent": "Zoom-api-Jwt-Request",
-      "content-type": "application/json",
-    },
-    json: true,
-  };
-
-  requestPromise(options)
-    .then(function (response) {
-      mailOptions.html = `Successful.`;
-      let transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL,
-          pass: process.env.PASSWORD,
-        },
-      });
-
-      transporter.sendMail(mailOptions, (err, data) => {
-        if (err) {
-          return console.log("Error occurs", err);
-        }
-        return res.status(200).send({ message: "success", success: true });
-      });
-      res.send("create meeting result: " + JSON.stringify(response));
-    })
-    .catch(function (err) {
-      console.log("API call failed, reason ", err);
-    });
-};
-
 exports.createAppointment = async (req, res) => {
   const data = req.body;
 
-  console.log("create appointment");
-  return res.json({ message: "success", data });
+  try {
+    const appointment = new Appointment({
+      ...data,
+      requested_by: req.user.id,
+      status: "pending",
+    });
+
+    return appointment.save(async (err, data) => {
+      return res.json({ message: "success", data });
+    });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+
+exports.checkAppointment = async (req, res) => {
+  try {
+    const data = await Appointment.findOne({ requested_by: req.user.id });
+    if(data.status === "progress") {
+      const meeting = await Meet.findOne({ user_id: req.user.id });
+      return res.json({ message: "success", data, meeting });
+    }
+    return res.json({ message: "success", data });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+
+exports.registerCustomer = async (req, res) => {
+  const { image } = req.body;
+
+  try {
+    const data = await Customer.find({
+      created_by: req.user.id,
+      $or: [{ status: "pending" }, { status: "verified" }],
+    });
+    if (data.length === 0) {
+      const appointment = new Customer({
+        created_by: req.user.id,
+        status: "pending",
+        image,
+      });
+
+      return appointment.save(async (err, data) => {
+        return res.json({ message: "success", data });
+      });
+    }
+    return res.json({ message: "existed", data });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
 };
