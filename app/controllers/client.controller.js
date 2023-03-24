@@ -228,7 +228,7 @@ exports.createAppointment = async (req, res) => {
 exports.checkAppointment = async (req, res) => {
   try {
     const data = await Appointment.findOne({ requested_by: req.user.id });
-    if(data.status === "progress") {
+    if(data?.status === "progress") {
       const meeting = await Meet.findOne({ user_id: req.user.id });
       return res.json({ message: "success", data, meeting });
     }
@@ -264,3 +264,17 @@ exports.registerCustomer = async (req, res) => {
     return res.json({ message: "something went wrong", success: false });
   }
 };
+
+exports.checkPurchasedPackage = async (req,res) => {
+  try {
+    const data = await Customer.findOne({
+      created_by: req.user.id,
+      $or: [{ status: "pending" }, { status: "verified" }],
+    });
+    return res.json({ message: "success", data });
+  }
+  catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+}

@@ -10,6 +10,7 @@ const {
   createAppointment,
   checkAppointment,
   registerCustomer,
+  checkPurchasedPackage,
 } = require("../controllers/client.controller");
 
 const router = Router();
@@ -23,5 +24,6 @@ router.post("/create_like", verifyToken, createLike);
 router.post("/create_appointment", verifyToken, createAppointment)
 router.get("/check_appointment", verifyToken, checkAppointment)
 router.post("/register_customer", verifyToken, registerCustomer)
+router.get("/check_customer_package", verifyToken, checkPurchasedPackage)
 
 module.exports = router;

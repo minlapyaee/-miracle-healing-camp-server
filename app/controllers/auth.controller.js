@@ -10,7 +10,7 @@ const nodemailer = require("nodemailer");
 
 // KrVXZJ 2023-02-18T07:46:23.677+00:00
 let mailOptions = {
-  from: process.env.EMAIL ,
+  from: process.env.EMAIL,
   subject: "Hello ✔ From Miracle Camp Healing",
 };
 
@@ -21,7 +21,7 @@ const generateToken = (user) => {
     },
     process.env.API_SECRET,
     {
-      expiresIn: "15m",
+      expiresIn: "5m",
     }
   );
   const refreshToken = jwt.sign(
@@ -58,6 +58,18 @@ const generateToken = (user) => {
     }));
 };
 
+const generateResetPwdToken = (user) => {
+  const pwdTokem = jwt.sign(
+    {
+      id: user.id,
+    },
+    process.env.API_SECRET,
+    {
+      expiresIn: "5m",
+    }
+  );
+  return pwdTokem;
+};
 exports.signup = async (req, res) => {
   try {
     let otp_code = otpGenerator.generate(6, {
@@ -169,7 +181,13 @@ exports.signin = (req, res) => {
       });
       return;
     }
-    const responseData = await generateToken(user);
+    const responseData = await generateToken({
+      _id: user._id,
+      id: user._id,
+      email: user.email,
+      fullname: user.fullname,
+      role: user.role,
+    });
     res.status(200).send(responseData);
   });
 };
@@ -185,4 +203,71 @@ exports.getinfo = (req, res) => {
     });
   }
   return res.json({ message: "not ok" });
+};
+
+exports.updateprofile = async (req, res) => {
+  try {
+    const { fullname } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { fullname },
+      {
+        returnDocument: "after",
+      }
+    );
+    return res.json({
+      message: "ok",
+      user,
+      accessToken: req.accessToken,
+      success: true,
+    });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+
+exports.resetPasswordLink = async (req, res) => {
+  try {
+    const token = generateResetPwdToken(req.user);
+    mailOptions.to = req.body.email;
+    mailOptions.html = `
+    Reset Password Link<br />
+    <a href=http://localhost:3000/reset-password/${token}>Reset Password Link</a>
+    `;
+    let transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD,
+      },
+    });
+
+    transporter.sendMail(mailOptions, (err, data) => {
+      if (err) {
+        return console.log("Error occurs", err);
+      }
+      return res.status(200).send({ message: "success", success: true });
+    });
+
+    console.log({ token });
+    return res.json({ message: "success", token });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const password = bcrypt.hashSync(req.body.password, 8);
+
+    await User.findByIdAndUpdate(req.user.id, { password });
+
+    return res.json({ message: "success" });
+  } catch (err) {
+    return res.json({ message: "something went wrong", success: false });
+  }
 };
