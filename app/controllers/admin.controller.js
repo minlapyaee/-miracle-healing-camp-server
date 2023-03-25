@@ -3,6 +3,7 @@ const requestPromise = require("request-promise");
 const Customer = require("../models/customer.model");
 const Meet = require("../models/meet.model");
 const Appointment = require("../models/appointment.model");
+const Class = require("../models/class.model");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 
@@ -77,7 +78,7 @@ exports.fetchCustomerList = async (req, res) => {
   try {
     const data = await Customer.find()
       .sort({
-        created_at: "descending",
+        createdAt: "descending",
       })
       .populate({
         path: "created_by",
@@ -124,7 +125,7 @@ exports.fetchAppointmentList = async (req, res) => {
   try {
     const data = await Appointment.find()
       .sort({
-        created_at: "descending",
+        createdAt: "descending",
       })
       .populate({
         path: "requested_by",
@@ -186,7 +187,7 @@ exports.updateAppointmentStatus = async (req, res) => {
           return res.json({ message: "failed" });
         });
     } else if (data.status === "completed") {
-       await Meet.findOneAndDelete({
+      await Meet.findOneAndDelete({
         user_id: data.requested_by,
       });
       return res.json({ message: "success" });
@@ -198,3 +199,62 @@ exports.updateAppointmentStatus = async (req, res) => {
     return res.json({ message: "something went wrong", success: false });
   }
 };
+
+exports.createClass = async (req, res) => {
+  const { class_name, google_form_link, class_id, duration } = req.body;
+  try {
+    if (class_id) {
+      await Class.findByIdAndUpdate(class_id, { class_name, google_form_link, duration });
+      return res.status(200).send({ message: "success" });
+    }
+    const createClass = new Class({
+      class_name,
+      google_form_link,
+      duration,
+      created_by: req.user.id,
+    });
+
+    return createClass.save(async (err, data) => {
+      if (err) {
+        return res.status(302).send({ success: false, message: err });
+      }
+
+      return res.status(200).send({ message: "success", success: true, data });
+    });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+
+exports.fetchAllClass = async (req, res) => {
+  try {
+    const data = await Class.find().sort({
+      createdAt: "descending",
+    });
+    return res.status(200).send({ message: "success", success: true, data });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+exports.fetchDetailClass = async (req, res) => {
+  const { class_id } = req.query;
+  try {
+    const data = await Class.findById(class_id);
+    return res.status(200).send({ message: "success", success: true, data });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+exports.removeClass = async (req,res) => {
+  const { class_id } = req.body
+  try {
+    const data = await Class.findByIdAndDelete(class_id);
+    return res.status(200).send({ message: "success",});
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+}
