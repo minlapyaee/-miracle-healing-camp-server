@@ -46,7 +46,6 @@ const createMeeting = async (sendTo) => {
 
     requestPromise(options)
       .then(function (response) {
-        console.log(response);
         const { join_url, id, password } = response;
         mailOptions.html = `Successful.`;
         mailOptions.to = sendTo;
@@ -145,7 +144,6 @@ exports.findAppointment = async (req, res) => {
     const { appointment_id } = req.query;
     const data = await Appointment.findById(appointment_id);
     if (data.status === "progress") {
-      console.log(data);
       const meeting = await Meet.findOne({ user_id: data.requested_by });
       return res.json({ message: "success", data, meeting });
     }
@@ -158,8 +156,7 @@ exports.findAppointment = async (req, res) => {
 
 exports.updateAppointmentStatus = async (req, res) => {
   try {
-    const { status, id } = req.body;
-
+    const { status, id, appointment_id } = req.body;
     const data = await Appointment.findByIdAndUpdate(
       id,
       { status },
@@ -169,7 +166,6 @@ exports.updateAppointmentStatus = async (req, res) => {
     );
     if (status === "progress") {
       const { join_url, host_id, password } = await createMeeting(data.email);
-      console.log({ join_url, host_id, password });
       Meet.findOneAndUpdate(
         { user_id: data.requested_by },
         { join_url, host_id, password, user_id: data.requested_by },
@@ -186,10 +182,14 @@ exports.updateAppointmentStatus = async (req, res) => {
           console.log(err);
           return res.json({ message: "failed" });
         });
-    } else if (data.status === "completed") {
+    } else if (status === "completed") {
       await Meet.findOneAndDelete({
         user_id: data.requested_by,
       });
+      await Customer.findOneAndUpdate(
+        { created_by: data.requested_by, status: "verified" },
+        { status: "expired" }
+      );
       return res.json({ message: "success" });
     } else {
       return res.json({ message: "success", data });
@@ -204,7 +204,11 @@ exports.createClass = async (req, res) => {
   const { class_name, google_form_link, class_id, duration } = req.body;
   try {
     if (class_id) {
-      await Class.findByIdAndUpdate(class_id, { class_name, google_form_link, duration });
+      await Class.findByIdAndUpdate(class_id, {
+        class_name,
+        google_form_link,
+        duration,
+      });
       return res.status(200).send({ message: "success" });
     }
     const createClass = new Class({
@@ -248,13 +252,13 @@ exports.fetchDetailClass = async (req, res) => {
     return res.json({ message: "something went wrong", success: false });
   }
 };
-exports.removeClass = async (req,res) => {
-  const { class_id } = req.body
+exports.removeClass = async (req, res) => {
+  const { class_id } = req.body;
   try {
     const data = await Class.findByIdAndDelete(class_id);
-    return res.status(200).send({ message: "success",});
+    return res.status(200).send({ message: "success" });
   } catch (err) {
     console.log("err", err);
     return res.json({ message: "something went wrong", success: false });
   }
-}
+};
