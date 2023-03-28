@@ -3,14 +3,24 @@ const requestPromise = require("request-promise");
 const Customer = require("../models/customer.model");
 const Meet = require("../models/meet.model");
 const Appointment = require("../models/appointment.model");
+const User = require("../models/user.model");
+const UserAudit = require("../models/useraudit.model");
 const Class = require("../models/class.model");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
+const otpGenerator = require("otp-generator");
+const bcrypt = require("bcrypt");
 
 let mailOptions = {
   from: process.env.EMAIL,
-  subject: "Zoom Meeting Using Node JS :D",
+  subject: "Zoom Meeting  :D",
 };
+
+let mailOptionsCreateAdmin = {
+  from: process.env.EMAIL,
+  subject: "Welcomet to Miracle Healing Camp Admin",
+};
+
 
 const payload = {
   iss: process.env.ZOOM_API_KEY, //your API KEY
@@ -257,6 +267,151 @@ exports.removeClass = async (req, res) => {
   try {
     const data = await Class.findByIdAndDelete(class_id);
     return res.status(200).send({ message: "success" });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+exports.fetchUserList = async (req, res) => {
+  try {
+    const data = await User.find({ role: "client" })
+      .select("id fullname email created_at")
+      .sort({ created_at: "descending" });
+    return res.status(200).send({ message: "success", data });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+
+exports.fetchAdminList = async (req, res) => {
+  try {
+    const data = await User.find({ role: "admin" })
+      .select("id fullname email created_at")
+      .sort({ created_at: "descending" });
+    return res.status(200).send({ message: "success", data });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+
+exports.createAdmin = async (req, res) => {
+  try {
+    let password = otpGenerator.generate(8, {
+      upperCaseAlphabets: true,
+      lowerCaseAlphabets: true,
+      specialChars: false,
+      digits: true,
+    });
+    const user = {
+      fullname: req.body.fullname,
+      email: req.body.email,
+      password: bcrypt.hashSync(password, 8),
+    };
+
+
+    const findUser = await User.findOne({ email: req.body.email });
+
+    if (findUser) {
+      return res.json({
+        message: "failed",
+        success: false,
+        info: "user already existed.",
+      });
+    }
+
+    const data = await User.create({
+      fullname: user.fullname,
+      email: user.email,
+      password: user.password,
+      role: "admin",
+    });
+
+    await UserAudit.create({
+      user_id: data._id,
+      created_by: req.user.id,
+      reason: "Created an account."
+    })
+    
+    mailOptionsCreateAdmin
+    mailOptionsCreateAdmin.to = user.email;
+    mailOptionsCreateAdmin.html = `
+    <table class="es-header-body" width="600" cellspacing="0" cellpadding="0" bgcolor="#ffffff" align="center">
+        <tbody>
+            <tr>
+                <td class="es-p20t es-p20r es-p20l esd-structure" align="left">
+                    <table cellspacing="0" cellpadding="0" width="100%">
+                        <tbody>
+                            <tr>
+                                <td class="es-m-p0r esd-container-frame" width="560" valign="top" align="center">
+                                    <table width="100%" cellspacing="0" cellpadding="0">
+                                        <tbody>
+                                            <tr>
+                                                <td align="left" class="esd-block-text">
+                                                    <p>Hello ${user.fullname}!<br><br>Your password: ${password}<br><br>(If you cannot connect to the server, please contact the administrator.)<br>From Miracle Healing Camp</p>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="es-m-p0r esd-container-frame" width="560" valign="top" align="center">
+                                    <table width="100%" cellspacing="0" cellpadding="0">
+                                        <tbody>
+                                            <tr>
+                                                <td align="left" class="esd-block-text">
+                                                    <p><br></p>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    `;
+    let transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD,
+      },
+    });
+
+
+    transporter.sendMail(mailOptionsCreateAdmin, (err, data) => {
+      if (err) {
+        return console.log("Error occurs", err);
+      }
+      return res.status(200).send({ message: "success", success: true });
+    });
+
+    console.log({password})
+    return res.json({ message: "success", password })
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+
+exports.fetchUserAudit = async (req, res) => {
+  try {
+    const data = await UserAudit.findOne({user_id: req.query.user_id})
+    .populate({
+      path: "created_by",
+      model: "User",
+      select: "id fullname",
+    });
+
+    return res.status(200).send({ message: "success", data });
   } catch (err) {
     console.log("err", err);
     return res.json({ message: "something went wrong", success: false });
