@@ -16,8 +16,8 @@ const {
 const router = Router();
 
 router.post("/create_post", verifyToken, create_post);
-router.get("/fetch_post", verifyToken, fetchPost);
-router.get("/fetch_post_detail", verifyToken, fetchPostDetail);
+router.get("/fetch_post", fetchPost);
+router.get("/fetch_post_detail", fetchPostDetail);
 router.post("/create_comment", verifyToken, createComment);
 router.get("/fetch_comment", verifyToken, fetchComment);
 router.post("/create_like", verifyToken, createLike);

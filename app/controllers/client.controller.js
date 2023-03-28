@@ -15,10 +15,12 @@ const token = jwt.sign(payload, process.env.ZOOM_API_SECRET);
 exports.create_post = async (req, res) => {
   const { title, content, type } = req.body;
   try {
+    const permalink = title.toLowerCase().replaceAll(" ", "-");
     const post = new Post({
       title,
       content,
       type,
+      permalink,
       created_by: req.user.id,
     });
     return post.save(async (err, data) => {
@@ -109,9 +111,9 @@ exports.createComment = async (req, res) => {
 };
 
 exports.fetchPostDetail = async (req, res) => {
-  const { title } = req.query;
+  const { id } = req.query;
   try {
-    const post = await Post.findOne({ title }).populate({
+    const post = await Post.findById(id).populate({
       path: "created_by",
       model: "User",
       select: "id fullname",
