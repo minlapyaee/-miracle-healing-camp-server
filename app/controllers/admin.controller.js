@@ -1,8 +1,10 @@
 require("dotenv").config();
 const requestPromise = require("request-promise");
 const Customer = require("../models/customer.model");
+const CustomerAudit = require("../models/customeraudit.model");
 const Meet = require("../models/meet.model");
 const Appointment = require("../models/appointment.model");
+const AppointmentAudit = require("../models/appointmentaudit.model");
 const User = require("../models/user.model");
 const UserAudit = require("../models/useraudit.model");
 const Class = require("../models/class.model");
@@ -20,7 +22,6 @@ let mailOptionsCreateAdmin = {
   from: process.env.EMAIL,
   subject: "Welcomet to Miracle Healing Camp Admin",
 };
-
 
 const payload = {
   iss: process.env.ZOOM_API_KEY, //your API KEY
@@ -115,7 +116,7 @@ exports.findCustomer = async (req, res) => {
 
 exports.updateCustomerStatus = async (req, res) => {
   try {
-    const { status, id } = req.body;
+    const { status, id, reason } = req.body;
     const data = await Customer.findByIdAndUpdate(
       id,
       { status },
@@ -123,7 +124,21 @@ exports.updateCustomerStatus = async (req, res) => {
         upsert: true,
       }
     );
-    return res.json({ message: "success", data });
+
+    if (reason) {
+      const customer_audit = new CustomerAudit({
+        reason,
+        created_by: req.user.id,
+        customer_id: id,
+      });
+      customer_audit.save((err) => {
+        if (err) return handleError(err);
+        // saved!
+        return res.json({ message: "success", data });
+      });
+    } else {
+      return res.json({ message: "success", data });
+    }
   } catch (err) {
     console.log("err", err);
     return res.json({ message: "something went wrong", success: false });
@@ -166,7 +181,7 @@ exports.findAppointment = async (req, res) => {
 
 exports.updateAppointmentStatus = async (req, res) => {
   try {
-    const { status, id, appointment_id } = req.body;
+    const { status, id, appointment_id, reason } = req.body;
     const data = await Appointment.findByIdAndUpdate(
       id,
       { status },
@@ -174,6 +189,14 @@ exports.updateAppointmentStatus = async (req, res) => {
         upsert: true,
       }
     );
+    if (reason) {
+      const newAudit = new AppointmentAudit({
+        reason,
+        created_by: req.user.id,
+        appointment_id: appointment_id,
+      });
+      await newAudit.save();
+    }
     if (status === "progress") {
       const { join_url, host_id, password } = await createMeeting(data.email);
       Meet.findOneAndUpdate(
@@ -310,7 +333,6 @@ exports.createAdmin = async (req, res) => {
       password: bcrypt.hashSync(password, 8),
     };
 
-
     const findUser = await User.findOne({ email: req.body.email });
 
     if (findUser) {
@@ -331,10 +353,10 @@ exports.createAdmin = async (req, res) => {
     await UserAudit.create({
       user_id: data._id,
       created_by: req.user.id,
-      reason: "Created an account."
-    })
-    
-    mailOptionsCreateAdmin
+      reason: "Created an account.",
+    });
+
+    mailOptionsCreateAdmin;
     mailOptionsCreateAdmin.to = user.email;
     mailOptionsCreateAdmin.html = `
     <table class="es-header-body" width="600" cellspacing="0" cellpadding="0" bgcolor="#ffffff" align="center">
@@ -386,7 +408,6 @@ exports.createAdmin = async (req, res) => {
       },
     });
 
-
     transporter.sendMail(mailOptionsCreateAdmin, (err, data) => {
       if (err) {
         return console.log("Error occurs", err);
@@ -394,8 +415,8 @@ exports.createAdmin = async (req, res) => {
       return res.status(200).send({ message: "success", success: true });
     });
 
-    console.log({password})
-    return res.json({ message: "success", password })
+    console.log({ password });
+    return res.json({ message: "success", password });
   } catch (err) {
     console.log("err", err);
     return res.json({ message: "something went wrong", success: false });
@@ -404,8 +425,42 @@ exports.createAdmin = async (req, res) => {
 
 exports.fetchUserAudit = async (req, res) => {
   try {
-    const data = await UserAudit.findOne({user_id: req.query.user_id})
-    .populate({
+    const data = await UserAudit.findOne({
+      user_id: req.query.user_id,
+    }).populate({
+      path: "created_by",
+      model: "User",
+      select: "id fullname",
+    });
+
+    return res.status(200).send({ message: "success", data });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+exports.fetchCustomerAudit = async (req, res) => {
+  try {
+    const data = await CustomerAudit.find({
+      customer_id: req.query.customer_id,
+    }).populate({
+      path: "created_by",
+      model: "User",
+      select: "id fullname",
+    });
+
+    return res.status(200).send({ message: "success", data });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+
+exports.fetchAppointmentAudit = async (req, res) => {
+  try {
+    const data = await AppointmentAudit.find({
+      appointment_id: req.query.appointment_id,
+    }).populate({
       path: "created_by",
       model: "User",
       select: "id fullname",
