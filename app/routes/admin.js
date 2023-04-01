@@ -1,7 +1,7 @@
 const { Router } = require("express");
 const verifyToken = require("../../middlewares/authorization");
 const {
-  fetchCustomerList, findCustomer, updateCustomerStatus, fetchAppointmentList, findAppointment, updateAppointmentStatus, createClass, fetchAllClass, fetchDetailClass, removeClass, fetchUserList, fetchAdminList, createAdmin, fetchUserAudit, fetchCustomerAudit, fetchAppointmentAudit
+  fetchCustomerList, findCustomer, updateCustomerStatus, fetchAppointmentList, findAppointment, updateAppointmentStatus, createClass, fetchAllClass, fetchDetailClass, removeClass, fetchUserList, fetchAdminList, createAdmin, fetchUserAudit, fetchCustomerAudit, fetchAppointmentAudit, fetchMaintennceStatus, updateMaintennceStatus
 } = require("../controllers/admin.controller");
 
 const router = Router();
@@ -22,5 +22,7 @@ router.post("/create-admin", verifyToken, createAdmin)
 router.get("/user-audit", verifyToken, fetchUserAudit)
 router.get("/customer-audit", verifyToken, fetchCustomerAudit)
 router.get("/appointment-audit", verifyToken, fetchAppointmentAudit)
+router.get("/fetch_maintenance_status", fetchMaintennceStatus)
+router.post("/update_maintenance_status", verifyToken, updateMaintennceStatus)
 
 module.exports = router;

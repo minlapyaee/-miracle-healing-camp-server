@@ -4,6 +4,7 @@ const Customer = require("../models/customer.model");
 const CustomerAudit = require("../models/customeraudit.model");
 const Meet = require("../models/meet.model");
 const Appointment = require("../models/appointment.model");
+const Maintenance = require("../models/maintenance.model");
 const AppointmentAudit = require("../models/appointmentaudit.model");
 const User = require("../models/user.model");
 const UserAudit = require("../models/useraudit.model");
@@ -465,6 +466,31 @@ exports.fetchAppointmentAudit = async (req, res) => {
       model: "User",
       select: "id fullname",
     });
+
+    return res.status(200).send({ message: "success", data });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+exports.fetchMaintennceStatus = async (req, res) => {
+  try {
+    const data = await Maintenance.find();
+
+    return res.status(200).send({ message: "success", data: data });
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+exports.updateMaintennceStatus = async (req, res) => {
+  try {
+    const { id, status } = req.body;
+    const data = await Maintenance.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true, upsert: true }
+    );
 
     return res.status(200).send({ message: "success", data });
   } catch (err) {

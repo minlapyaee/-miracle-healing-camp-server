@@ -1,4 +1,5 @@
 const Post = require("../models/post.model");
+const SavedPost = require("../models/savedpost.model");
 const Comment = require("../models/comment.model");
 const Appointment = require("../models/appointment.model");
 const Meet = require("../models/meet.model");
@@ -36,20 +37,7 @@ exports.create_post = async (req, res) => {
 };
 
 exports.fetchPost = async (req, res) => {
-  const { post_id } = req.query;
   try {
-    if (post_id) {
-      const data = await Post.findById(post_id)
-        .sort({
-          created_at: "ascending",
-        })
-        .populate({
-          path: "created_by",
-          model: "User",
-          select: "id fullname",
-        });
-      return res.json({ message: "success", success: true, data });
-    }
     const posts = await Post.find()
       .sort({
         created_at: "descending",
@@ -61,25 +49,68 @@ exports.fetchPost = async (req, res) => {
       });
 
     let data = [];
+    let finalData = data;
     posts.map(async (post) => {
       data.push(
         new Promise(async (resolve, reject) => {
-          const like = await Like.find({ post_id: post._id });
-          resolve({ post, likes: like });
+          let like = [];
+          let savedPost = [];
+          if (req.user) {
+            like = await Like.find({
+              post_id: post._id,
+              created_by: req.user._id,
+            });
+            savedPost = await SavedPost.find({
+              post_id: post._id,
+              created_by: req.user._id,
+            });
+          }
+          let likeCount = await Like.find({ post_id: post._id }).count();
+          let commentCount = await Comment.find({ post_id: post._id }).count();
+          resolve({
+            post,
+            isLike: like.length > 0 ? true : false,
+            isSavedPost: savedPost.length > 0 ? true : false,
+            likeCount,
+            commentCount,
+          });
         })
       );
     });
 
+    finalData = await Promise.all(data);
+
     return res.json({
       message: "success",
       success: true,
-      data: await Promise.all(data),
+      data: finalData,
     });
   } catch (err) {
     console.log(err);
     return res.json({ message: "something went wrong", success: false });
   }
 };
+
+// exports.fetchSavedPost = async (req, res) => {
+//   try {
+//     const posts = await SavedPost.find({created_by: req.user.id  })
+//       .sort({
+//         created_at: "descending",
+//       })
+//       .populate({
+//         path: "created_by",
+//         model: "User",
+//         select: "id fullname",
+//       });
+//       console.log(posts)
+//     let data = [];
+//     let finalData = data;
+//           return res.status(200).send({ message: "success", success: true, data });
+//   } catch (err) {
+//     console.log(err);
+//     return res.json({ message: "something went wrong", success: false });
+//   }
+// };
 exports.createComment = async (req, res) => {
   const { content, post_id, post_owner_id } = req.body;
   try {
@@ -118,15 +149,120 @@ exports.fetchPostDetail = async (req, res) => {
       model: "User",
       select: "id fullname",
     });
+    let like = [];
+    let savedPost = [];
+    let likeCount = await Like.find({ post_id: post._id }).count();
+    let commentCount = await Comment.find({ post_id: post._id }).count();
+    if (req.user) {
+      like = await Like.find({
+        post_id: post._id,
+        created_by: req.user._id,
+      });
+      savedPost = await SavedPost.find({
+        post_id: post._id,
+        created_by: req.user._id,
+      });
 
-    const likes = await Like.find({ post_id: post._id });
+    }
     return res.json({
       message: "success",
       success: true,
-      data: { post, likes },
+      data: {
+        post,
+        isLike: like.length > 0 ? true : false,
+        isSavedPost: savedPost.length > 0 ? true : false,
+        likeCount,
+        commentCount
+      },
     });
   } catch (err) {
     console.log(err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+
+exports.createsavedPost = async (req, res) => {
+  try {
+    const { post_id } = req.body;
+    SavedPost.findOneAndDelete(
+      { post_id, created_by: req.user.id },
+      function (err, doc) {
+        if (err) {
+          console.log("err", err);
+          return res.json({ message: "something went wrong", success: false });
+        }
+        if (!doc) {
+          const savedPostData = new SavedPost({
+            created_by: req.user.id,
+            post_id,
+          });
+          return savedPostData.save(async (err, data) => {
+            if (err) {
+              return res.status(302).send({ success: false, message: err });
+            }
+
+            return res
+              .status(200)
+              .send({ message: "success", success: true, data });
+          });
+        }
+      }
+    );
+  } catch (err) {
+    console.log("err", err);
+    return res.json({ message: "something went wrong", success: false });
+  }
+};
+
+exports.fetchSavedPost = async (req, res) => {
+  try {
+    const posts = await SavedPost.find({ created_by: req.user.id }).populate({
+      path: "post_id",
+      model: "Post",
+      select: "id title content permalink type created_by created_at",
+      populate: {
+        path: "created_by",
+        model: "User",
+        select: "id fullname",
+      },
+    });
+    
+    console.log(posts)
+
+    let data = [];
+    let finalData = data;
+    posts.map(async (post) => {
+      data.push(
+        new Promise(async (resolve, reject) => {
+          let like = [];
+          let savedPost = [];
+          if (req.user) {
+            like = await Like.find({
+              post_id: post.post_id._id,
+              created_by: req.user._id,
+            });
+            savedPost = await SavedPost.find({
+              post_id: post.post_id._id,
+              created_by: req.user._id,
+            });
+          }
+          let likeCount = await Like.find({ post_id: post.post_id._id }).count();
+          let commentCount = await Comment.find({ post_id: post.post_id._id }).count();
+          resolve({
+            post,
+            isLike: like.length > 0 ? true : false,
+            isSavedPost: savedPost.length > 0 ? true : false,
+            likeCount,
+            commentCount,
+          });
+        })
+      );
+    });
+
+    finalData = await Promise.all(data);
+    return res.json({ message: "success", success: true, data: finalData });
+  } catch (err) {
+    console.log('err', err)
     return res.json({ message: "something went wrong", success: false });
   }
 };
