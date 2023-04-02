@@ -16,6 +16,7 @@ const token = jwt.sign(payload, process.env.ZOOM_API_SECRET);
 exports.create_post = async (req, res) => {
   const { title, content, type } = req.body;
   try {
+    console.log({body: req.body})
     const permalink = title.toString().toLowerCase().replaceAll(" ", "-");
     const post = new Post({
       title,
