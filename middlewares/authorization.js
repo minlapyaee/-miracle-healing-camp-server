@@ -80,7 +80,7 @@ const verifyToken = (req, res, next) => {
   const removeFirstWord = req.headers.authorization.split(" ")[1];
   if (
     originalUrl === "/client/fetch_post" ||
-    originalUrl === "/client/fetch_post_detai"
+    originalUrl.includes("/client/fetch_post_detail")
   ) {
     if (removeFirstWord !== "undefined") {
       return jwtVerifyFunction(req, res, next);
