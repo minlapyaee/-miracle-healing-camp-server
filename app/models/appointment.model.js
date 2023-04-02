@@ -7,15 +7,53 @@ const appointmentSchema = new Schema({
     type: mongoose.SchemaTypes.ObjectId,
     ref: "User",
   },
-  requested_to: {
-    type: mongoose.SchemaTypes.ObjectId,
-    ref: "User",
+  first_name: {
+    type: String,
   },
-  date: {
+  last_name: {
+    type: String,
+  },
+  dob_day: {
+    type: String,
+  },
+  dob_month: {
+    type: String,
+  },
+  dob_year: {
+    type: String,
+  },
+  gender: {
+    type: String,
+  },
+  phone_number: {
+    type: String,
+  },
+  email: {
+    type: String,
+  },
+  appointment_before: {
+    type: String,
+  },
+  feel_streeed: {
+    type: String,
+  },
+  past_two_weeks: {
+    type: String,
+  },
+  having_hard_time_to_sleep: {
+    type: String,
+  },
+  appointment_time: {
     type: Date,
   },
-  time: {
+  appointment_date: {
     type: Date,
+  },
+  status: {
+    type: String
+  },
+  feedback: {
+    type: String,
   },
   createdAt: {
     type: Date,

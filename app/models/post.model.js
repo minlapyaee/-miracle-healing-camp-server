@@ -9,6 +9,9 @@ const postSchema = new Schema({
   content: {
     type: String,
   },
+  permalink: {
+    type: String,
+  },
   type: {
     type: String,
     required: true,

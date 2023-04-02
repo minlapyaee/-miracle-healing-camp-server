@@ -6,6 +6,7 @@ const cors = require("cors");
 const config = require("./config");
 const userRoutes = require("./app/routes/user");
 const clientRoutes = require("./app/routes/client");
+const adminRoutes = require("./app/routes/admin");
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use(cors());
 // route
 app.use("/user", userRoutes);
 app.use("/client", clientRoutes);
+app.use("/admin", adminRoutes);
 
 connection
   .on("error", console.log)
