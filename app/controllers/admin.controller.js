@@ -301,7 +301,8 @@ exports.fetchUserList = async (req, res) => {
     const data = await User.find({ role: "client" })
       .select("id fullname email created_at")
       .sort({ created_at: "descending" });
-    return res.status(200).send({ message: "success", data });
+      const totalCount = await User.count({ role: "client" });
+    return res.status(200).send({ message: "success", data, totalCount });
   } catch (err) {
     console.log("err", err);
     return res.json({ message: "something went wrong", success: false });
@@ -313,7 +314,8 @@ exports.fetchAdminList = async (req, res) => {
     const data = await User.find({ role: "admin" })
       .select("id fullname email created_at")
       .sort({ created_at: "descending" });
-    return res.status(200).send({ message: "success", data });
+    const totalCount = await User.count({ role: "admin" });
+    return res.status(200).send({ message: "success", data, totalCount });
   } catch (err) {
     console.log("err", err);
     return res.json({ message: "something went wrong", success: false });
