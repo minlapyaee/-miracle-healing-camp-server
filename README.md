@@ -5,7 +5,7 @@
 <br />
 <div align="center">
   <a href="#">
-    <img src="" alt="Logo" width="80" height="80">
+     <img src="https://github.com/minlapyaee/miracle-healing-camp/blob/min/src/assets/logo.jpg?raw=true" alt="Logo" width="300" height="300">
   </a>
 
   <h3 align="center">Miracle Healing Camp Server</h3>
