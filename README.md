@@ -84,7 +84,7 @@
    API_SECRET = 
    REFRESH_TOKEN_SECRET =
    EMAIL= 
-   PASSWORD= EMAIL APP Passworf
+   PASSWORD= EMAIL APP Password
    ```
 5. Run a Project
    ```sh
