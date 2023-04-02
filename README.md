@@ -81,10 +81,10 @@
    ```js
    MONGODB_DEV_URL= mongodb://localhost:27017/miracle-healing-camp
    PORT = 4000
-   API_SECRET = $2y$10$tZVSWU.fBQCOxZWV9/n95OUCZqWtzgBA6Hu.Rso2rNAOWzdk1kS6C
-   REFRESH_TOKEN_SECRET = dGhpc2lzcmVmcmVzaHRva2Vuc2VjcmV0a2V5
-   EMAIL= miracle.healingcamp@gmail.com
-   PASSWORD= wzxixzlgfiayorad
+   API_SECRET = 
+   REFRESH_TOKEN_SECRET =
+   EMAIL= 
+   PASSWORD= EMAIL APP Passworf
    ```
 5. Run a Project
    ```sh
